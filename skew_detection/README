@@ -1,0 +1,5 @@
+SKEW DETECTION
+
+The bee hives are armoured with cameras to detect the bee traffic and also to continuously monitor the bee hives. Since the bee hives are placed in remote locations, we cannot assure that the camera would always take images which are not skewed and as a result our analysis of bee traffic would be hampered. So the first task in this analysis would be to identify the angle of skewness that is present in each image, such that the resultant image would be devoid of any skewness.
+
+The ALgorithm is to be continued ......
