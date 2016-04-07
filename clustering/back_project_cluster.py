@@ -36,6 +36,7 @@ def contour_finding(gray_image,item_roi):
         if item.endswith(".png") or item.endswith(".PNG"):
             x = os.path.join(root, item)
             im = cv2.imread(x)
+            #im_cropped = cv2.imread()
             imgray = cv2.cvtColor(im, cv2.COLOR_BGR2GRAY)
             # print item
             ret, thresh = cv2.threshold(imgray, 25, 255, 0)
@@ -90,7 +91,7 @@ def contour_finding(gray_image,item_roi):
             my_file.write('Contour dimensions of: '+item+' are ('+str(row_cmt[0])+', '+str(col_cmt[0])+') and ('+str(row_cmt[len(col_cmt)-1])+', '+str(col_cmt[len(col_cmt)-1])+')'+'\n')
             my_file.close()
 
-            return row_cmt[0], col_cmt[0], len(col_cmt), col_width
+            return row_cmt[0],row_cmt[len(col_cmt)-1],col_cmt[0],col_cmt[len(col_cmt) - 1], len(col_cmt), col_width
 
 
 
@@ -98,8 +99,10 @@ def contour_finding(gray_image,item_roi):
 test_path = "/home/sarbajit/PyCharm_Scripts/test/green_pad_same_name_new/final_rotated/"
 test_path1 = "/home/sarbajit/PyCharm_Scripts/test/back_project_test/roi_day/"
 cluster_path = "/home/sarbajit/PyCharm_Scripts/test/back_project_test/clusters/"
-#roi = cv2.imread('/home/sarbajit/PyCharm_Scripts/test/back_project_test/test18.png')
-#hsv = cv2.cvtColor(roi,cv2.COLOR_BGR2HSV)
+cluster_path_cropped = "/home/sarbajit/PyCharm_Scripts/test/back_project_test/cropped_clusters_contour/"
+cluster_path_cropped_full = "/home/sarbajit/PyCharm_Scripts/test/back_project_test/full_cropped_clusters_contour/"
+c1_ideal = 40
+c2_ideal = 335
 item_roi_dict_total = {}
 key_list=[]
 item_list=[]
@@ -117,8 +120,9 @@ for root1, dirs, files in os.walk(test_path1):
                     if item.endswith(".png"):
                         x=os.path.join(root, item)
                         target = cv2.imread(x)
-                        #target = target[70:160,90:500]
                         target = target[90:150,110:470]
+                        im_cropped = target
+                        im_cropped2 = target
                         hsvt = cv2.cvtColor(target,cv2.COLOR_BGR2HSV)
 
                         # calculating object histogram
@@ -140,64 +144,60 @@ for root1, dirs, files in os.walk(test_path1):
                         # Now convolute with circular disc
                         disc = cv2.getStructuringElement(cv2.MORPH_ELLIPSE,(5,5))
                         cv2.filter2D(dst,-1,disc,dst)
+
                         # threshold and binary AND
                         ret,thresh = cv2.threshold(dst,50,255,0)
                         thresh = cv2.merge((thresh,thresh,thresh))
                         res = cv2.bitwise_and(target,thresh)
 
-                        #res = np.vstack((target,thresh,res))
-                        #cv2.imwrite('test/back_project_test/test4.png',res)
-                        #cv2.imwrite("/home/sarbajit/PyCharm_Scripts/test/back_project_test/results/"+item, res)
                         if not os.path.exists(cluster_path+item_roi):
                             os.makedirs(cluster_path+item_roi)
                         #print 'item: '+item+' done'
                         if match > 0.15:
                             item_roi_dict[item]=match
-                            #my_file = open('/home/sarbajit/PyCharm_Scripts/test/back_project_test/txt_results/highmatch.txt','a')
                             my_file = open(cluster_path+item_roi+'/highmatch.txt','a')
                             my_file.write(item+': '+str(match)+'\n')
                             my_file.close()
-                            #cv2.imwrite("/home/sarbajit/PyCharm_Scripts/test/back_project_test/txt_results/"+item, res)
+
                             for key1 in item_roi_dict_total:
                                 for key2 in item_roi_dict_total[key1]:
                                     if item in key2:
                                         if item_roi_dict_total[key1][item]<match:
-                                            # del item_roi_dict_total[key1][item]
                                             my_file = open(cluster_path+item_roi+'/match.txt','a')
                                             my_file.write('Match occured with: '+item+' in '+key1+'\n')
                                             my_file.close()
+
                                             if os.path.isfile('/home/sarbajit/PyCharm_Scripts/test/back_project_test/clusters/'+key1+'/'+item):
                                                 os.remove('/home/sarbajit/PyCharm_Scripts/test/back_project_test/clusters/'+key1+'/'+item)
-                                            # del item_roi_dict_total[key1][item]
 
                             cv2.imwrite(cluster_path+item_roi+'/'+item, res)
                             color_res = cv2.cvtColor(res, cv2.COLOR_HSV2BGR)
                             gray_res = cv2.cvtColor(color_res, cv2.COLOR_BGR2GRAY)
                             cv2.imwrite("/home/sarbajit/PyCharm_Scripts/test/back_project_test/results_gray_temp/" + item, gray_res)
-                            r, c, length_contour, col_width = contour_finding(item,item_roi)
+                            r1,r2,c1,c2,length_contour, col_width = contour_finding(item,item_roi)
+
                             if col_width < 175:
                                 if os.path.isfile('/home/sarbajit/PyCharm_Scripts/test/back_project_test/clusters_contour/'+item_roi+'/'+item):
                                     os.remove('/home/sarbajit/PyCharm_Scripts/test/back_project_test/clusters_contour/'+item_roi+'/'+item)
+                            else:
+                                if not os.path.exists(cluster_path_cropped+item_roi):
+                                    os.makedirs(cluster_path_cropped+item_roi)
+                                im_cropped = im_cropped[r1:r2,c1:c2]
+                                cv2.imwrite(cluster_path_cropped+item_roi+'/'+item, im_cropped)
 
-            #my_file = open(cluster_path+item_roi+'/match.txt','a')
-            #my_file.write(item+': '+str(match)+'\n')
-            #my_file.close()
-            #print item_roi_dict
-            #print item_roi_dict['2015-08-11_08-12-50.png']
+                                if not os.path.exists(cluster_path_cropped_full+item_roi):
+                                    os.makedirs(cluster_path_cropped_full+item_roi)
+
+                                if ((c1>40)or(c2<335)):
+                                    c1 = c1_ideal
+                                    c2 = c2_ideal
+
+                                im_cropped2 = im_cropped2[r1:r2,c1:c2]
+                                cv2.imwrite(cluster_path_cropped_full+item_roi+'/'+item, im_cropped2)
+
+
             item_roi_dict_total[item_roi]=item_roi_dict
-#print item_roi_dict_total
-#print item_roi_dict_total[1]['2015-08-10_06-27-50.png']
-#for occurance in item_roi_dict_total:
- #   for key in occurance:
-  #      print occurance[key]
-        #if occurance[item]>match:
-            #my_file = open(cluster_path+item_roi+'/match.txt','a')
-            #my_file.write('Match occured with: '+item+' in'+key+'\n')
-            #my_file.close()
-#print item_roi_dict_total['2015-08-06_06-42-48.png']
-#for key1 in item_roi_dict_total:
- #   print item_roi_dict_total[key1]
-#print length_contour
+
 
 
 print("--- %s seconds ---" % (time.time() - start_time))
