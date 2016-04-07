@@ -1,0 +1,18 @@
+The following steps describes my approach in detecting the landing pad using sliding window technique.
+
+1. Inside the back_project_cluster.py we have 
+r1,r2,c1,c2,length_contour, row_height = contour_finding(item,item_roi).
+
+2. From the above returned our variables of interest are r1,r2 and row_height. r1 and r2 are the two limits of the landing pad that we have found from the largest contour.
+
+3. Now in our sliding_window function we set row_height as our 'stepSize'.
+
+4. We would like our sliding_window to move only in the region that has the pad, thus we use sliding_window_x function.
+
+5. Insid ethe function where we tell the window to move in only the required region, we set the xrange with r1 and r2. 'y in xrange(r1, r2, stepSize):'
+
+6. What the above algorithm does is moves the sliding window exactly over the landing pad region inside the image.
+
+7. Now while this window moves over the pad, we would like to do some more computations, thus essentially we would find the actual width of the landing, essentially finding out the exact dimensions of the pad.
+
+8. For that we run backprojection again and find the match. Ideally we would see a sharp drop when the window reaches the end of the pad on either side. That would help us find the column dimensions of the landing pad.
