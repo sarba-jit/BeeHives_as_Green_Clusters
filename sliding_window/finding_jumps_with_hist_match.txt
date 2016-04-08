@@ -1,0 +1,16 @@
+The following algorithm is used to find the boundary points of the landing pad region
+
+1. As the sliding_window moves through the image, we note the value of the histogram match after doing the backprojection.
+
+2. We see where the first jump occurs from low to high and note the required value.
+
+3. We iterate further as the window moves and see where the second jump takes place from high to low.
+when we get such jump, we note the required region.
+
+4. Now there might be cases where the match might reduce in the between and it might again increase towards the ending of the landing region. We need to take care of such cases.
+
+5. So we iterate further and see if there is a jump from low to high:
+
+	a. if there is a jump then wait and iterate further for the next jump to low and we replace the previous recorded value in Step 3 with the value of the current detected region.
+
+	b. if no jump is seen, then we can safely note the previous value for the low region as the final required value.
